@@ -1,0 +1,104 @@
+@{ ViewData["Title"] = "Dashboard"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>Dashboard</h4>
+    <span class="text-muted">Welcome, <strong>@ViewBag.FullName</strong></span>
+</div>
+
+@if (ViewBag.Role == "ClinicManager")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="mb-1 small opacity-75">Today's Appointments</p><h3 class="mb-0">@ViewBag.TotalAppointmentsToday</h3></div>
+                        <i class="bi bi-calendar-day fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="mb-1 small opacity-75">Pending Confirmations</p><h3 class="mb-0">@ViewBag.PendingConfirmations</h3></div>
+                        <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="mb-1 small opacity-75">Active Doctors</p><h3 class="mb-0">@ViewBag.ActiveDoctors</h3></div>
+                        <i class="bi bi-person-badge fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><p class="mb-1 small opacity-75">Total Patients</p><h3 class="mb-0">@ViewBag.TotalPatients</h3></div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-2">
+        <div class="col-md-4"><a asp-controller="Appointments" asp-action="Index" class="btn btn-outline-primary w-100 py-3"><i class="bi bi-calendar-check me-2"></i>All Appointments</a></div>
+        <div class="col-md-4"><a asp-controller="Doctors" asp-action="Index" class="btn btn-outline-success w-100 py-3"><i class="bi bi-person-badge me-2"></i>Manage Doctors</a></div>
+        <div class="col-md-4"><a asp-controller="Appointments" asp-action="WaitingRoom" class="btn btn-outline-info w-100 py-3"><i class="bi bi-display me-2"></i>Waiting Room</a></div>
+    </div>
+}
+else if (ViewBag.Role == "Doctor")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-primary text-white shadow-sm">
+                <div class="card-body"><p class="mb-1 small opacity-75">Today's Appointments</p><h3 class="mb-0">@ViewBag.TodayAppointments</h3></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-warning text-white shadow-sm">
+                <div class="card-body"><p class="mb-1 small opacity-75">Awaiting Consultation</p><h3 class="mb-0">@ViewBag.PendingAppointments</h3></div>
+            </div>
+        </div>
+    </div>
+    <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary me-2"><i class="bi bi-calendar-check me-1"></i>My Schedule</a>
+    <a asp-controller="Patients" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-people me-1"></i>My Patients</a>
+}
+else if (ViewBag.Role == "Receptionist")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-primary text-white shadow-sm">
+                <div class="card-body"><p class="mb-1 small opacity-75">Today's Appointments</p><h3 class="mb-0">@ViewBag.TodayAppointments</h3></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-warning text-white shadow-sm">
+                <div class="card-body"><p class="mb-1 small opacity-75">Awaiting Check-In</p><h3 class="mb-0">@ViewBag.AwaitingCheckIn</h3></div>
+            </div>
+        </div>
+    </div>
+    <a asp-controller="Appointments" asp-action="Book" class="btn btn-primary me-2"><i class="bi bi-plus-circle me-1"></i>Book Appointment</a>
+    <a asp-controller="Appointments" asp-action="WaitingRoom" class="btn btn-outline-primary"><i class="bi bi-display me-1"></i>Waiting Room</a>
+}
+else if (ViewBag.Role == "Patient")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3">
+            <div class="card border-0 bg-primary text-white shadow-sm">
+                <div class="card-body"><p class="mb-1 small opacity-75">Upcoming Appointments</p><h3 class="mb-0">@ViewBag.UpcomingAppointments</h3></div>
+            </div>
+        </div>
+    </div>
+    <a asp-controller="Appointments" asp-action="Book" class="btn btn-primary me-2"><i class="bi bi-plus-circle me-1"></i>Book Appointment</a>
+    <a asp-controller="Patients" asp-action="Profile" class="btn btn-outline-primary me-2"><i class="bi bi-person-lines-fill me-1"></i>My Profile</a>
+    <a asp-controller="Appointments" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-calendar me-1"></i>My Appointments</a>
+}
