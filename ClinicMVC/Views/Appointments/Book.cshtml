@@ -1,0 +1,119 @@
+@model ClinicMVC.ViewModels.BookAppointmentViewModel
+@{ ViewData["Title"] = "Book Appointment"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white"><i class="bi bi-plus-circle me-2"></i>Book Appointment</div>
+            <div class="card-body p-4">
+                <form asp-action="Book" method="post" id="bookForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                    @if (User.IsInRole("Receptionist") || User.IsInRole("ClinicManager"))
+                    {
+                        <div class="mb-3">
+                            <label asp-for="PatientId" class="form-label">Patient</label>
+                            <select asp-for="PatientId" asp-items="Model.Patients" class="form-select">
+                                <option value="">Select patient...</option>
+                            </select>
+                            <span asp-validation-for="PatientId" class="text-danger small"></span>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="SpecializationId" class="form-label">Specialization</label>
+                        <select asp-for="SpecializationId" asp-items="Model.Specializations" class="form-select" id="specializationSelect">
+                            <option value="">Select specialization...</option>
+                        </select>
+                        <span asp-validation-for="SpecializationId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DoctorId" class="form-label">Doctor</label>
+                        <select asp-for="DoctorId" class="form-select" id="doctorSelect" disabled>
+                            <option value="">Select specialization first...</option>
+                        </select>
+                        <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AppointmentDate" class="form-label">Date</label>
+                        <input asp-for="AppointmentDate" class="form-control" type="date" id="dateInput"
+                               min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" disabled />
+                        <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TimeSlot" class="form-label">Time Slot</label>
+                        <select asp-for="TimeSlot" class="form-select" id="slotSelect" disabled>
+                            <option value="">Select date first...</option>
+                        </select>
+                        <span asp-validation-for="TimeSlot" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ReasonForVisit" class="form-label">Reason for Visit</label>
+                        <textarea asp-for="ReasonForVisit" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="ReasonForVisit" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-calendar-check me-2"></i>Book Appointment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        const specSelect = document.getElementById('specializationSelect');
+        const doctorSelect = document.getElementById('doctorSelect');
+        const dateInput = document.getElementById('dateInput');
+        const slotSelect = document.getElementById('slotSelect');
+
+        specSelect.addEventListener('change', async () => {
+            const specId = specSelect.value;
+            doctorSelect.innerHTML = '<option value="">Loading...</option>';
+            doctorSelect.disabled = true;
+            dateInput.disabled = true;
+            slotSelect.disabled = true;
+
+            if (!specId) return;
+
+            const res = await fetch(`/Appointments/GetDoctorsBySpecialization?specializationId=${specId}`);
+            const doctors = await res.json();
+            doctorSelect.innerHTML = '<option value="">Select doctor...</option>';
+            doctors.forEach(d => {
+                const opt = new Option(d.text, d.value);
+                doctorSelect.add(opt);
+            });
+            doctorSelect.disabled = false;
+        });
+
+        doctorSelect.addEventListener('change', () => {
+            dateInput.disabled = !doctorSelect.value;
+            slotSelect.innerHTML = '<option value="">Select date first...</option>';
+            slotSelect.disabled = true;
+        });
+
+        dateInput.addEventListener('change', async () => {
+            const doctorId = doctorSelect.value;
+            const date = dateInput.value;
+            if (!doctorId || !date) return;
+
+            slotSelect.innerHTML = '<option value="">Loading slots...</option>';
+            slotSelect.disabled = true;
+
+            const res = await fetch(`/Appointments/GetTimeSlots?doctorId=${doctorId}&date=${date}`);
+            const slots = await res.json();
+            slotSelect.innerHTML = '<option value="">Select time slot...</option>';
+            if (slots.length === 0) {
+                slotSelect.innerHTML = '<option value="">No available slots for this date</option>';
+            } else {
+                slots.forEach(s => slotSelect.add(new Option(s.text, s.value)));
+                slotSelect.disabled = false;
+            }
+        });
+    </script>
+}

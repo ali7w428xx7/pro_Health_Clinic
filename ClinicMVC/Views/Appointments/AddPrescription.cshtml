@@ -1,0 +1,44 @@
+@model ClinicMVC.ViewModels.AddPrescriptionViewModel
+@{ ViewData["Title"] = "Add Prescription"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white"><i class="bi bi-capsule me-2"></i>Add Prescription</div>
+            <div class="card-body p-4">
+                <form asp-action="AddPrescription" method="post">
+                    <input asp-for="VisitRecordId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="MedicationName" class="form-label"></label>
+                            <input asp-for="MedicationName" class="form-control" />
+                            <span asp-validation-for="MedicationName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Dosage" class="form-label"></label>
+                            <input asp-for="Dosage" class="form-control" placeholder="e.g. 500mg" />
+                            <span asp-validation-for="Dosage" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Frequency" class="form-label"></label>
+                            <input asp-for="Frequency" class="form-control" placeholder="e.g. Twice daily" />
+                            <span asp-validation-for="Frequency" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Duration" class="form-label"></label>
+                            <input asp-for="Duration" class="form-control" placeholder="e.g. 7 days" />
+                            <span asp-validation-for="Duration" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SpecialInstructions" class="form-label"></label>
+                            <textarea asp-for="SpecialInstructions" class="form-control" rows="2" placeholder="Take with food, avoid alcohol..."></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 w-100"><i class="bi bi-plus me-1"></i>Add Prescription</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

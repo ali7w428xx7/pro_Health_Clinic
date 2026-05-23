@@ -1,0 +1,26 @@
+@model ClinicMVC.ViewModels.CancelAppointmentViewModel
+@{ ViewData["Title"] = "Cancel Appointment"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white"><i class="bi bi-x-circle me-2"></i>Cancel Appointment</div>
+            <div class="card-body p-4">
+                <form asp-action="Cancel" method="post">
+                    <input asp-for="AppointmentId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="mb-3">
+                        <label asp-for="CancellationReason" class="form-label"></label>
+                        <textarea asp-for="CancellationReason" class="form-control" rows="3" placeholder="Please provide a reason..."></textarea>
+                        <span asp-validation-for="CancellationReason" class="text-danger small"></span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger flex-grow-1">Confirm Cancellation</button>
+                        <a asp-action="Details" asp-route-id="@Model.AppointmentId" class="btn btn-outline-secondary flex-grow-1">Go Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
