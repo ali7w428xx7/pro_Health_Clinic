@@ -1,0 +1,42 @@
+@model ClinicMVC.ViewModels.DoctorListViewModel
+@{ ViewData["Title"] = "Doctors"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-hospital text-primary me-2"></i>Doctors</h4>
+</div>
+
+<div class="row g-3">
+    @foreach (var d in Model.Doctors)
+    {
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-person-badge text-primary me-2" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <div class="fw-semibold">@d.FullName</div>
+                            <div class="text-muted small">@string.Join(", ", d.Specializations)</div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(d.Bio))
+                    {
+                        <p class="text-muted small mb-2">@d.Bio</p>
+                    }
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge @(d.IsActive ? "bg-success" : "bg-secondary")">
+                            @(d.IsActive ? "Active" : "Inactive")
+                        </span>
+                        <div class="btn-group btn-group-sm">
+                            <a asp-action="Details" asp-route-id="@d.Id" class="btn btn-outline-primary">Details</a>
+                            <a asp-action="Edit" asp-route-id="@d.Id" class="btn btn-outline-secondary">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    @if (!Model.Doctors.Any())
+    {
+        <div class="col-12"><p class="text-muted">No doctors found.</p></div>
+    }
+</div>

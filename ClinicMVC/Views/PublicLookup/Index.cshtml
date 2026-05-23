@@ -1,0 +1,31 @@
+@{ ViewData["Title"] = "Appointment Lookup"; Layout = "~/Views/Shared/_Layout.cshtml"; }
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white"><i class="bi bi-search me-2"></i>Public Appointment Lookup</div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">Enter your CPR number and patient reference number to view your upcoming appointments and recent visits — no login required.</p>
+                <form asp-action="Index" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    @if (ViewBag.NotFound == true)
+                    {
+                        <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No patient found with the provided details.</div>
+                    }
+                    <div class="mb-3">
+                        <label class="form-label">CPR Number</label>
+                        <input type="text" name="cprNumber" class="form-control" placeholder="e.g. 900112345" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Patient Reference Number</label>
+                        <input type="text" name="patientReferenceNumber" class="form-control" placeholder="e.g. PAT-0001" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-2"></i>Look Up</button>
+                </form>
+                <hr />
+                <p class="text-center small mb-0"><a asp-controller="Account" asp-action="Login">Login for full access</a></p>
+            </div>
+        </div>
+    </div>
+</div>

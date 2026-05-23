@@ -1,0 +1,123 @@
+@model List<ClinicMVC.ViewModels.AppointmentRowViewModel>
+@{ ViewData["Title"] = "Waiting Room"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-display text-primary me-2"></i>Live Waiting Room</h4>
+    <span class="badge bg-success" id="connectionStatus">Connecting...</span>
+</div>
+
+<p class="text-muted small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>This view updates in real time as appointment statuses change.</p>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle" id="waitingTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Time</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Specialization</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="waitingBody">
+            @foreach (var a in Model)
+            {
+                <tr id="row-@a.Id">
+                    <td>@a.StartTime.ToString(@"hh\:mm")</td>
+                    <td>@a.PatientName<br /><small class="text-muted">@a.PatientCPR</small></td>
+                    <td>@a.DoctorName</td>
+                    <td>@a.SpecializationName</td>
+                    <td><span class="badge @GetBadge(a.Status) status-badge">@a.Status</span></td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-outline-primary btn-sm">View</a>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr id="emptyRow"><td colspan="6" class="text-center text-muted py-4">No active appointments today.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    string GetBadge(ClinicAPI.Models.AppointmentStatus s) => s switch {
+        ClinicAPI.Models.AppointmentStatus.Completed => "bg-success",
+        ClinicAPI.Models.AppointmentStatus.Cancelled => "bg-secondary",
+        ClinicAPI.Models.AppointmentStatus.Missed => "bg-danger",
+        ClinicAPI.Models.AppointmentStatus.InProgress => "bg-warning text-dark",
+        ClinicAPI.Models.AppointmentStatus.CheckedIn => "bg-info text-dark",
+        ClinicAPI.Models.AppointmentStatus.Confirmed => "bg-primary",
+        _ => "bg-light text-dark border"
+    };
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const statusBadges = {
+            'Requested': 'bg-light text-dark border',
+            'Confirmed': 'bg-primary',
+            'CheckedIn': 'bg-info text-dark',
+            'InProgress': 'bg-warning text-dark',
+            'Completed': 'bg-success',
+            'Cancelled': 'bg-secondary',
+            'Missed': 'bg-danger'
+        };
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("@(ViewBag.ApiBaseUrl ?? "https://localhost:7100")/hubs/appointments")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("AppointmentStatusChanged", (data) => {
+            const row = document.getElementById('row-' + data.id);
+            if (row) {
+                const badge = row.querySelector('.status-badge');
+                badge.className = 'badge status-badge ' + (statusBadges[data.status] || 'bg-light text-dark border');
+                badge.textContent = data.status;
+
+                // Flash the row
+                row.classList.add('table-warning');
+                setTimeout(() => row.classList.remove('table-warning'), 2000);
+            } else if (data.status !== 'Cancelled' && data.status !== 'Completed' && data.status !== 'Missed') {
+                // New appointment arrived — add a row
+                const tbody = document.getElementById('waitingBody');
+                const emptyRow = document.getElementById('emptyRow');
+                if (emptyRow) emptyRow.remove();
+
+                const tr = document.createElement('tr');
+                tr.id = 'row-' + data.id;
+                tr.innerHTML = `
+                    <td>${data.startTime}</td>
+                    <td>${data.patientName}</td>
+                    <td>${data.doctorName}</td>
+                    <td>—</td>
+                    <td><span class="badge ${statusBadges[data.status] || ''} status-badge">${data.status}</span></td>
+                    <td><a href="/Appointments/Details/${data.id}" class="btn btn-outline-primary btn-sm">View</a></td>`;
+                tbody.appendChild(tr);
+            }
+        });
+
+        connection.start()
+            .then(() => {
+                document.getElementById('connectionStatus').textContent = 'Live';
+                document.getElementById('connectionStatus').className = 'badge bg-success';
+            })
+            .catch(err => {
+                document.getElementById('connectionStatus').textContent = 'Offline';
+                document.getElementById('connectionStatus').className = 'badge bg-danger';
+            });
+
+        connection.onreconnecting(() => {
+            document.getElementById('connectionStatus').textContent = 'Reconnecting...';
+            document.getElementById('connectionStatus').className = 'badge bg-warning';
+        });
+        connection.onreconnected(() => {
+            document.getElementById('connectionStatus').textContent = 'Live';
+            document.getElementById('connectionStatus').className = 'badge bg-success';
+        });
+    </script>
+}
