@@ -1,0 +1,92 @@
+@model ClinicMVC.ViewModels.PatientProfileViewModel
+@{ ViewData["Title"] = "Patient Profile"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-person-circle text-primary me-2"></i>@Model.FullName</h4>
+    @if (User.IsInRole("Patient"))
+    { <a asp-controller="Appointments" asp-action="Book" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Book Appointment</a> }
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-semibold">Personal Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5">CPR</dt><dd class="col-7">@Model.CPRNumber</dd>
+                    <dt class="col-5">Reference</dt><dd class="col-7 text-primary fw-semibold">@Model.PatientReferenceNumber</dd>
+                    <dt class="col-5">Email</dt><dd class="col-7">@Model.Email</dd>
+                    <dt class="col-5">Date of Birth</dt><dd class="col-7">@Model.DateOfBirth.ToString("dd MMM yyyy")</dd>
+                    <dt class="col-5">Gender</dt><dd class="col-7">@Model.Gender</dd>
+                    <dt class="col-5">Phone</dt><dd class="col-7">@Model.Phone</dd>
+                    <dt class="col-5">Address</dt><dd class="col-7">@Model.Address</dd>
+                    @if (!string.IsNullOrEmpty(Model.BloodType))
+                    { <dt class="col-5">Blood Type</dt><dd class="col-7"><span class="badge bg-danger">@Model.BloodType</span></dd> }
+                    @if (!string.IsNullOrEmpty(Model.Allergies))
+                    { <dt class="col-5">Allergies</dt><dd class="col-7 text-warning">@Model.Allergies</dd> }
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light fw-semibold">Recent Appointments</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>Date</th><th>Doctor</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var a in Model.RecentAppointments)
+                            {
+                                <tr>
+                                    <td>@a.AppointmentDate.ToString("dd MMM yyyy")</td>
+                                    <td>@a.DoctorName</td>
+                                    <td><span class="badge bg-primary">@a.Status</span></td>
+                                    <td><a asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id" class="btn btn-outline-primary btn-sm">View</a></td>
+                                </tr>
+                            }
+                            @if (!Model.RecentAppointments.Any())
+                            { <tr><td colspan="4" class="text-muted text-center py-3">No appointments yet.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="mb-3"><i class="bi bi-clipboard2-pulse me-2 text-success"></i>Visit History</h5>
+@if (Model.VisitHistory.Any())
+{
+    @foreach (var v in Model.VisitHistory)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <span><strong>@v.AppointmentDate.ToString("dd MMM yyyy")</strong> &mdash; @v.DoctorName</span>
+                <span class="text-muted small">@v.SpecializationName</span>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-2">
+                    <dt class="col-md-2">Diagnosis</dt><dd class="col-md-10">@v.Diagnosis</dd>
+                    <dt class="col-md-2">Treatment</dt><dd class="col-md-10">@v.TreatmentPlan</dd>
+                    @if (!string.IsNullOrEmpty(v.DoctorNotes))
+                    { <dt class="col-md-2">Notes</dt><dd class="col-md-10 text-muted">@v.DoctorNotes</dd> }
+                </dl>
+                @if (v.Prescriptions.Any())
+                {
+                    <h6 class="small fw-semibold text-muted mb-1">Prescriptions</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light"><tr><th>Medication</th><th>Dosage</th><th>Frequency</th><th>Duration</th></tr></thead>
+                            <tbody>
+                                @foreach (var p in v.Prescriptions)
+                                { <tr><td>@p.MedicationName</td><td>@p.Dosage</td><td>@p.Frequency</td><td>@p.Duration</td></tr> }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+else { <p class="text-muted">No visit history recorded yet.</p> }
