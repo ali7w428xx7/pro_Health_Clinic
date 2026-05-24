@@ -1,0 +1,91 @@
+@model ClinicReport.Models.CancellationRateDto
+@{ ViewData["Title"] = "Cancellation Rates"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-x-circle text-primary me-2"></i>Cancellation Rates</h4>
+</div>
+
+@if (Model == null)
+{
+    <div class="alert alert-info">No cancellation data available.</div>
+    return;
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm text-center">
+            <div class="card-body py-4">
+                <div class="text-muted mb-1">Overall Cancellation Rate</div>
+                <div class="display-4 fw-bold @(Model.OverallCancellationRate > 20 ? "text-danger" : Model.OverallCancellationRate > 10 ? "text-warning" : "text-success")">
+                    @Model.OverallCancellationRate.ToString("F1")%
+                </div>
+                <div class="text-muted small mt-2">@Model.TotalCancelled cancelled out of @Model.TotalAppointments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">Cancellations by Doctor</div>
+            <div class="card-body">
+                <canvas id="cancelChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.ByDoctor.Any())
+{
+    <div class="card shadow-sm">
+        <div class="card-header fw-semibold">Doctor Detail</div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Doctor</th><th>Total</th><th>Cancelled</th><th>Rate</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.ByDoctor.OrderByDescending(x => x.Rate))
+                    {
+                        <tr>
+                            <td>@d.DoctorName</td>
+                            <td>@d.Total</td>
+                            <td>@d.Cancelled</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height:8px;">
+                                        <div class="progress-bar @(d.Rate > 20 ? "bg-danger" : d.Rate > 10 ? "bg-warning" : "bg-success")"
+                                             style="width:@(Math.Min(d.Rate, 100))%"></div>
+                                    </div>
+                                    <span class="small">@d.Rate.ToString("F1")%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{
+        var names = string.Join(",", Model.ByDoctor.Select(d => $"\"{d.DoctorName}\""));
+        var cancelled = string.Join(",", Model.ByDoctor.Select(d => d.Cancelled));
+        var totals = string.Join(",", Model.ByDoctor.Select(d => d.Total));
+    }
+    <script>
+        new Chart(document.getElementById('cancelChart'), {
+            type: 'bar',
+            data: {
+                labels: [@Html.Raw(names)],
+                datasets: [
+                    { label: 'Cancelled', data: [@Html.Raw(cancelled)], backgroundColor: 'rgba(220,53,69,0.7)' },
+                    { label: 'Total', data: [@Html.Raw(totals)], backgroundColor: 'rgba(13,110,253,0.3)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    </script>
+}
