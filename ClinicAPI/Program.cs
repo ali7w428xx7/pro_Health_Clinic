@@ -64,13 +64,13 @@ builder.Services.AddAuthentication(options =>
 });
 
 // ── CORS ───────────────────────────────────────────────────────────────────
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "https://localhost:7001", "http://localhost:5001", "https://localhost:7002", "http://localhost:5002" };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClinicPolicy", policy =>
-        policy.WithOrigins(
-                "https://localhost:7001", "http://localhost:5001",  // ClinicMVC
-                "https://localhost:7002", "http://localhost:5002"   // ClinicReport
-              )
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -112,21 +112,27 @@ var app = builder.Build();
 // ── Seed database ──────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
-    await SeedData.InitialiseAsync(scope.ServiceProvider);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        await SeedData.InitialiseAsync(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database seeding failed — app will still start");
+    }
 }
 
 // ── Middleware Pipeline ────────────────────────────────────────────────────
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("ClinicPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", () => Results.Redirect("/swagger"));
 app.MapControllers();
 app.MapHub<AppointmentHub>("/hubs/appointments");
 
