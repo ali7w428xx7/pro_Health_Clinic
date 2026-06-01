@@ -19,7 +19,7 @@
                 <div class="display-4 fw-bold @(Model.OverallCancellationRate > 20 ? "text-danger" : Model.OverallCancellationRate > 10 ? "text-warning" : "text-success")">
                     @Model.OverallCancellationRate.ToString("F1")%
                 </div>
-                <div class="text-muted small mt-2">@Model.TotalCancelled cancelled out of @Model.TotalAppointments</div>
+                <div class="text-muted small mt-2">No-show rate: @Model.OverallNoShowRate.ToString("F1")%</div>
             </div>
         </div>
     </div>
@@ -43,7 +43,7 @@
                     <tr><th>Doctor</th><th>Total</th><th>Cancelled</th><th>Rate</th></tr>
                 </thead>
                 <tbody>
-                    @foreach (var d in Model.ByDoctor.OrderByDescending(x => x.Rate))
+                    @foreach (var d in Model.ByDoctor.OrderByDescending(x => x.CancellationRate))
                     {
                         <tr>
                             <td>@d.DoctorName</td>
@@ -52,10 +52,10 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress flex-grow-1" style="height:8px;">
-                                        <div class="progress-bar @(d.Rate > 20 ? "bg-danger" : d.Rate > 10 ? "bg-warning" : "bg-success")"
-                                             style="width:@(Math.Min(d.Rate, 100))%"></div>
+                                        <div class="progress-bar @(d.CancellationRate > 20 ? "bg-danger" : d.CancellationRate > 10 ? "bg-warning" : "bg-success")"
+                                             style="width:@(Math.Min(d.CancellationRate, 100))%"></div>
                                     </div>
-                                    <span class="small">@d.Rate.ToString("F1")%</span>
+                                    <span class="small">@d.CancellationRate.ToString("F1")%</span>
                                 </div>
                             </td>
                         </tr>

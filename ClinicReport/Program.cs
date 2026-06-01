@@ -15,13 +15,19 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 
 var apiBase = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7100";
-builder.Services.AddHttpClient("ClinicAPI", client =>
+var httpClientBuilder = builder.Services.AddHttpClient("ClinicAPI", client =>
 {
     client.BaseAddress = new Uri(apiBase);
-}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-{
-    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 });
+
+// Allow self-signed certs in Development only
+if (builder.Environment.IsDevelopment())
+{
+    httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    });
+}
 
 builder.Services.AddScoped<IReportApiClient, ReportApiClient>();
 

@@ -15,14 +15,20 @@ public class AuthResponse
     public DateTime Expiry { get; set; }
 }
 
+// ── Must match ClinicAPI DTOs exactly so JSON deserialization works ──────────
+
 public class AppointmentStatsDto
 {
-    public int TotalAppointments { get; set; }
+    public int Total { get; set; }
     public int Completed { get; set; }
     public int Cancelled { get; set; }
-    public int Pending { get; set; }
+    public int Missed { get; set; }
+    public int Requested { get; set; }
+    public int Confirmed { get; set; }
     public double CompletionRate { get; set; }
-    public List<MonthlyStatDto> MonthlyBreakdown { get; set; } = [];
+    public double CancellationRate { get; set; }
+    public double NoShowRate { get; set; }
+    public List<MonthlyStatDto> ByMonth { get; set; } = [];
     public List<SpecializationStatDto> BySpecialization { get; set; } = [];
 }
 
@@ -38,33 +44,34 @@ public class MonthlyStatDto
 
 public class SpecializationStatDto
 {
-    public string Specialization { get; set; } = "";
+    public string Name { get; set; } = "";
     public int Total { get; set; }
-    public int Completed { get; set; }
 }
 
 public class DoctorUtilizationDto
 {
+    public int DoctorId { get; set; }
     public string DoctorName { get; set; } = "";
-    public int TotalSlots { get; set; }
-    public int BookedSlots { get; set; }
-    public double UtilizationRate { get; set; }
-    public int CompletedAppointments { get; set; }
     public List<string> Specializations { get; set; } = [];
+    public int TotalAppointments { get; set; }
+    public int CompletedAppointments { get; set; }
+    public int CancelledAppointments { get; set; }
+    public double UtilizationRate { get; set; }
 }
 
 public class CancellationRateDto
 {
     public double OverallCancellationRate { get; set; }
-    public int TotalCancelled { get; set; }
-    public int TotalAppointments { get; set; }
+    public double OverallNoShowRate { get; set; }
     public List<DoctorCancellationDto> ByDoctor { get; set; } = [];
 }
 
 public class DoctorCancellationDto
 {
     public string DoctorName { get; set; } = "";
-    public int Cancelled { get; set; }
     public int Total { get; set; }
-    public double Rate { get; set; }
+    public int Cancelled { get; set; }
+    public int Missed { get; set; }
+    public double CancellationRate { get; set; }
+    public double NoShowRate { get; set; }
 }

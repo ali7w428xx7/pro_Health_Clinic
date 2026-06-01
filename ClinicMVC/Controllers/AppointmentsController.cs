@@ -224,8 +224,9 @@ public class AppointmentsController : Controller
         _db.Appointments.Add(appointment);
         await _db.SaveChangesAsync();
 
-        var patientRecord = await _db.Patients.Include(p => p.ApplicationUser).FirstAsync(p => p.Id == patientId);
-        var doctor = await _db.Doctors.Include(d => d.ApplicationUser).FirstAsync(d => d.Id == model.DoctorId);
+        var patientRecord = await _db.Patients.Include(p => p.ApplicationUser).FirstOrDefaultAsync(p => p.Id == patientId);
+        var doctor = await _db.Doctors.Include(d => d.ApplicationUser).FirstOrDefaultAsync(d => d.Id == model.DoctorId);
+        if (patientRecord == null || doctor == null) { TempData["Error"] = "Patient or doctor not found."; return RedirectToAction("Index"); }
 
         await _notifyService.SendToManyAsync(
             [patientRecord.ApplicationUserId, doctor.ApplicationUserId],

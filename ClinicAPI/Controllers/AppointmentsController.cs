@@ -150,8 +150,9 @@ public class AppointmentsController : ControllerBase
         await _db.SaveChangesAsync();
 
         // Notify patient and doctor
-        var patient = await _db.Patients.Include(p => p.ApplicationUser).FirstAsync(p => p.Id == dto.PatientId);
-        var doctorUser = await _db.Doctors.Include(d => d.ApplicationUser).FirstAsync(d => d.Id == dto.DoctorId);
+        var patient = await _db.Patients.Include(p => p.ApplicationUser).FirstOrDefaultAsync(p => p.Id == dto.PatientId);
+        var doctorUser = await _db.Doctors.Include(d => d.ApplicationUser).FirstOrDefaultAsync(d => d.Id == dto.DoctorId);
+        if (patient == null || doctorUser == null) return NotFound(new { message = "Patient or doctor not found." });
 
         await _notifyService.SendToManyAsync(
             [patient.ApplicationUserId, doctorUser.ApplicationUserId],

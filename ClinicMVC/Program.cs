@@ -9,7 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Database (shared from ClinicAPI project) ───────────────────────────────
 builder.Services.AddDbContext<ClinicDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null)));
 
 // ── ASP.NET Identity with Cookie Auth ─────────────────────────────────────
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

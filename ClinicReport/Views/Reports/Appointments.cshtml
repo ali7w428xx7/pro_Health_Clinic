@@ -12,15 +12,15 @@
 }
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card text-center shadow-sm">
             <div class="card-body">
                 <div class="text-muted small">Total</div>
-                <div class="fs-2 fw-bold text-primary">@Model.TotalAppointments</div>
+                <div class="fs-2 fw-bold text-primary">@Model.Total</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card text-center shadow-sm">
             <div class="card-body">
                 <div class="text-muted small">Completed</div>
@@ -28,7 +28,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card text-center shadow-sm">
             <div class="card-body">
                 <div class="text-muted small">Cancelled</div>
@@ -36,11 +36,27 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <div class="card text-center shadow-sm">
             <div class="card-body">
-                <div class="text-muted small">Pending / Other</div>
-                <div class="fs-2 fw-bold text-warning">@Model.Pending</div>
+                <div class="text-muted small">Missed</div>
+                <div class="fs-2 fw-bold text-warning">@Model.Missed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Pending</div>
+                <div class="fs-2 fw-bold text-info">@(Model.Requested + Model.Confirmed)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Completion %</div>
+                <div class="fs-2 fw-bold text-primary">@Model.CompletionRate.ToString("F1")%</div>
             </div>
         </div>
     </div>
@@ -71,21 +87,21 @@
         <div class="card-header fw-semibold">Specialization Breakdown</div>
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
-                <thead class="table-light"><tr><th>Specialization</th><th>Total</th><th>Completed</th><th>Completion Rate</th></tr></thead>
+                <thead class="table-light">
+                    <tr><th>Specialization</th><th>Total Appointments</th></tr>
+                </thead>
                 <tbody>
                     @foreach (var s in Model.BySpecialization)
                     {
-                        var rate = s.Total > 0 ? (double)s.Completed / s.Total * 100 : 0;
+                        var pct = Model.Total > 0 ? (double)s.Total / Model.Total * 100 : 0;
                         <tr>
-                            <td>@s.Specialization</td>
-                            <td>@s.Total</td>
-                            <td>@s.Completed</td>
+                            <td>@s.Name</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="progress flex-grow-1" style="height:8px;">
-                                        <div class="progress-bar bg-success" style="width:@rate%"></div>
+                                        <div class="progress-bar bg-primary" style="width:@pct%"></div>
                                     </div>
-                                    <span class="small">@rate.ToString("F0")%</span>
+                                    <span class="small">@s.Total (@pct.ToString("F0")%)</span>
                                 </div>
                             </td>
                         </tr>
@@ -98,14 +114,15 @@
 
 @section Scripts {
     @{
-        var monthly = Model.MonthlyBreakdown.TakeLast(12).ToList();
-        var mLabels = string.Join(",", monthly.Select(m => $"\"{m.MonthName} {m.Year}\""));
+        var monthly = Model.ByMonth.TakeLast(12).ToList();
+        var mLabels = string.Join(",", monthly.Select(m => $"\"{m.MonthName}\""));
         var mTotal = string.Join(",", monthly.Select(m => m.Total));
         var mCompleted = string.Join(",", monthly.Select(m => m.Completed));
         var mCancelled = string.Join(",", monthly.Select(m => m.Cancelled));
-        var sLabels = string.Join(",", Model.BySpecialization.Select(s => $"\"{s.Specialization}\""));
+        var sLabels = string.Join(",", Model.BySpecialization.Select(s => $"\"{s.Name}\""));
         var sTotals = string.Join(",", Model.BySpecialization.Select(s => s.Total));
     }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         new Chart(document.getElementById('monthlyTrendChart'), {
             type: 'line',

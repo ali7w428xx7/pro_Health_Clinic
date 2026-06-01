@@ -17,7 +17,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <div class="small opacity-75">Total Appointments</div>
-                            <div class="fs-3 fw-bold">@stats.TotalAppointments</div>
+                            <div class="fs-3 fw-bold">@stats.Total</div>
                         </div>
                         <i class="bi bi-calendar3 opacity-50" style="font-size:2rem;"></i>
                     </div>
@@ -93,7 +93,7 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
-                        <tr><th>Doctor</th><th>Specializations</th><th>Booked / Slots</th><th>Utilization</th></tr>
+                        <tr><th>Doctor</th><th>Specializations</th><th>Completed / Total</th><th>Utilization</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var d in utilization.Take(5))
@@ -101,7 +101,7 @@
                             <tr>
                                 <td>@d.DoctorName</td>
                                 <td class="text-muted small">@string.Join(", ", d.Specializations)</td>
-                                <td>@d.BookedSlots / @d.TotalSlots</td>
+                                <td>@d.CompletedAppointments / @d.TotalAppointments</td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="progress flex-grow-1" style="height:8px;">
@@ -130,7 +130,7 @@
                     <div class="display-5 fw-bold @(cancellations.OverallCancellationRate > 20 ? "text-danger" : "text-success")">
                         @cancellations.OverallCancellationRate.ToString("F1")%
                     </div>
-                    <div class="text-muted small">@cancellations.TotalCancelled of @cancellations.TotalAppointments appointments</div>
+                    <div class="text-muted small">No-show rate: @cancellations.OverallNoShowRate.ToString("F1")%</div>
                 </div>
             </div>
         </div>
@@ -138,14 +138,14 @@
 }
 
 @section Scripts {
-    @if (stats != null && stats.MonthlyBreakdown.Any())
+    @if (stats != null && stats.ByMonth.Any())
     {
-        var monthly = stats.MonthlyBreakdown.TakeLast(6).ToList();
+        var monthly = stats.ByMonth.TakeLast(6).ToList();
         var labels = string.Join(",", monthly.Select(m => $"\"{m.MonthName}\""));
         var totals = string.Join(",", monthly.Select(m => m.Total));
         var completedData = string.Join(",", monthly.Select(m => m.Completed));
         var cancelledData = string.Join(",", monthly.Select(m => m.Cancelled));
-        var specLabels = string.Join(",", stats.BySpecialization.Select(s => $"\"{s.Specialization}\""));
+        var specLabels = string.Join(",", stats.BySpecialization.Select(s => $"\"{s.Name}\""));
         var specTotals = string.Join(",", stats.BySpecialization.Select(s => s.Total));
 
         <script>

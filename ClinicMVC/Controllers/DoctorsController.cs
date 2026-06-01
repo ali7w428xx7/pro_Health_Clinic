@@ -118,7 +118,7 @@ public class DoctorsController : Controller
                 .Include(a => a.Patient).ThenInclude(p => p.ApplicationUser)
                 .Where(a => a.DoctorId == doctor.Id &&
                             a.AppointmentDate >= DateOnly.FromDateTime(DateTime.Today) &&
-                            a.Status == AppointmentStatus.Requested || a.Status == AppointmentStatus.Confirmed)
+                            (a.Status == AppointmentStatus.Requested || a.Status == AppointmentStatus.Confirmed))
                 .ToListAsync();
 
             foreach (var appt in affected)
