@@ -69,7 +69,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ClinicPolicy", policy =>
         policy.WithOrigins(
                 "https://localhost:7001", "http://localhost:5001",  // ClinicMVC
-                "https://localhost:7002", "http://localhost:5002"   // ClinicReport
+                "https://localhost:7002", "http://localhost:5002",  // ClinicReport
+                "https://localhost:7283", "http://localhost:5283"   // ClinicMVC (dev)
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
