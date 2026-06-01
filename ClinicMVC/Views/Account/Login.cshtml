@@ -1,0 +1,42 @@
+@model ClinicMVC.ViewModels.LoginViewModel
+@{ ViewData["Title"] = "Login"; Layout = "~/Views/Shared/_Layout.cshtml"; }
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="card-title text-center mb-4">
+                    <i class="bi bi-hospital text-primary me-2"></i>Clinic System Login
+                </h4>
+                <form asp-action="Login" method="post">
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Enter your password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+                <hr />
+                <p class="text-center mb-0 small">
+                    New patient? <a asp-action="Register">Register here</a>
+                </p>
+                <p class="text-center mb-0 small mt-1">
+                    <a asp-controller="PublicLookup" asp-action="Index">Look up appointment without login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

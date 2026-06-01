@@ -1,0 +1,88 @@
+@model ClinicMVC.ViewModels.CreateStaffViewModel
+@using ClinicAPI.Models
+@{ ViewData["Title"] = "Create Staff Account"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white"><i class="bi bi-person-plus me-2"></i>Create Staff Account</div>
+            <div class="card-body p-4">
+                <form asp-action="CreateStaff" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" type="password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Role" class="form-label"></label>
+                            <select asp-for="Role" class="form-select" id="roleSelect">
+                                <option value="">-- Select Role --</option>
+                                <option value="@((int)UserRole.Doctor)">Doctor</option>
+                                <option value="@((int)UserRole.Receptionist)">Receptionist</option>
+                                <option value="@((int)UserRole.ClinicManager)">Clinic Manager</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12" id="doctorSection" style="display:none;">
+                            <label asp-for="LicenseNumber" class="form-label"></label>
+                            <input asp-for="LicenseNumber" class="form-control" placeholder="e.g. LIC-12345" />
+                            <span asp-validation-for="LicenseNumber" class="text-danger small"></span>
+                            <div class="mt-3">
+                                <label asp-for="Bio" class="form-label"></label>
+                                <textarea asp-for="Bio" class="form-control" rows="2" placeholder="Short professional biography..."></textarea>
+                            </div>
+                            @if (ViewBag.Specializations != null)
+                            {
+                                <div class="mt-3">
+                                    <label class="form-label">Specializations</label>
+                                    <div class="border rounded p-2">
+                                        @foreach (var item in (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Specializations)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="SpecializationIds" value="@item.Value" />
+                                                <label class="form-check-label">@item.Text</label>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 w-100"><i class="bi bi-check-circle me-1"></i>Create Account</button>
+                    <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary mt-2 w-100">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        const roleSelect = document.getElementById('roleSelect');
+        const doctorSection = document.getElementById('doctorSection');
+        function toggleDoctor() {
+            doctorSection.style.display = roleSelect.value === '@((int)UserRole.Doctor)' ? '' : 'none';
+        }
+        roleSelect.addEventListener('change', toggleDoctor);
+        toggleDoctor();
+    </script>
+}

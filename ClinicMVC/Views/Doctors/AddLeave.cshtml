@@ -1,0 +1,37 @@
+@model ClinicMVC.ViewModels.AddLeaveViewModel
+@{ ViewData["Title"] = "Add Leave Period"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark"><i class="bi bi-calendar-x me-2"></i>Add Leave Period</div>
+            <div class="card-body p-4">
+                <form asp-action="AddLeave" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="DoctorId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label"></label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label"></label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Reason" class="form-label"></label>
+                            <textarea asp-for="Reason" class="form-control" rows="3" placeholder="e.g. Annual leave, Medical leave..."></textarea>
+                            <span asp-validation-for="Reason" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning mt-3 w-100 text-dark"><i class="bi bi-calendar-check me-1"></i>Save Leave</button>
+                    <a asp-action="Details" asp-route-id="@Model.DoctorId" class="btn btn-outline-secondary mt-2 w-100">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

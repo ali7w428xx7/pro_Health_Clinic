@@ -1,0 +1,55 @@
+@model ClinicMVC.ViewModels.PatientListViewModel
+@{ ViewData["Title"] = "Patients"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0"><i class="bi bi-people text-primary me-2"></i>Patients</h4>
+</div>
+
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="input-group" style="max-width:400px;">
+        <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Search by name or CPR..." />
+        <button type="submit" class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>CPR</th>
+                        <th>Phone</th>
+                        <th>Gender</th>
+                        <th>Appointments</th>
+                        <th>Last Visit</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Patients)
+                    {
+                        <tr>
+                            <td>@p.FullName</td>
+                            <td class="text-muted small">@p.CPRNumber</td>
+                            <td>@p.Phone</td>
+                            <td>@p.Gender</td>
+                            <td>@p.AppointmentCount</td>
+                            <td>@(p.LastVisit.HasValue ? p.LastVisit.Value.ToString("dd MMM yyyy") : "—")</td>
+                            <td>
+                                <a asp-action="Profile" asp-route-id="@p.Id" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-person-lines-fill me-1"></i>Profile
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Patients.Any())
+                    {
+                        <tr><td colspan="7" class="text-muted text-center py-4">No patients found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
