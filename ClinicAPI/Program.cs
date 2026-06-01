@@ -70,7 +70,12 @@ builder.Services.AddAuthentication(options =>
 
 // ── CORS ───────────────────────────────────────────────────────────────────
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "https://localhost:7001", "http://localhost:5001", "https://localhost:7002", "http://localhost:5002" };
+    ?? new[]
+    {
+        "https://localhost:7001", "http://localhost:5001",
+        "https://localhost:7002", "http://localhost:5002",
+        "https://localhost:7269", "https://localhost:7283", "http://localhost:5283"
+    };
 
 builder.Services.AddCors(options =>
 {

@@ -1,5 +1,6 @@
 using ClinicAPI.Data;
 using ClinicAPI.Models;
+using ClinicAPI.Services;
 using ClinicMVC.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +13,13 @@ namespace ClinicMVC.Controllers;
 public class DoctorsController : Controller
 {
     private readonly ClinicDbContext _db;
+    private readonly INotificationService _notifyService;
 
-    public DoctorsController(ClinicDbContext db) => _db = db;
+    public DoctorsController(ClinicDbContext db, INotificationService notifyService)
+    {
+        _db = db;
+        _notifyService = notifyService;
+    }
 
     public async Task<IActionResult> Index()
     {
@@ -193,7 +199,36 @@ public class DoctorsController : Controller
             IsApproved = true
         });
         await _db.SaveChangesAsync();
-        TempData["Success"] = "Leave period added.";
+
+        // Cancel all Requested/Confirmed appointments that fall within the leave period
+        var affected = await _db.Appointments
+            .Include(a => a.Patient).ThenInclude(p => p.ApplicationUser)
+            .Include(a => a.Doctor).ThenInclude(d => d.ApplicationUser)
+            .Where(a => a.DoctorId == model.DoctorId &&
+                        a.AppointmentDate >= model.StartDate &&
+                        a.AppointmentDate <= model.EndDate &&
+                        (a.Status == AppointmentStatus.Requested || a.Status == AppointmentStatus.Confirmed))
+            .ToListAsync();
+
+        foreach (var appt in affected)
+        {
+            appt.Status = AppointmentStatus.Cancelled;
+            appt.CancellationReason = $"Doctor is on leave from {model.StartDate:dd/MM/yyyy} to {model.EndDate:dd/MM/yyyy}.";
+            appt.UpdatedAt = DateTime.UtcNow;
+
+            await _notifyService.SendAsync(
+                appt.Patient.ApplicationUserId,
+                "Appointment Cancelled",
+                $"Your appointment on {appt.AppointmentDate:dd/MM/yyyy} at {appt.StartTime:hh\\:mm} has been cancelled because the doctor is on leave.",
+                NotificationType.AppointmentCancelled, appt.Id);
+        }
+
+        if (affected.Count > 0)
+            await _db.SaveChangesAsync();
+
+        TempData["Success"] = affected.Count > 0
+            ? $"Leave period added and {affected.Count} affected appointment(s) cancelled."
+            : "Leave period added.";
         return RedirectToAction("Details", new { id = model.DoctorId });
     }
 
