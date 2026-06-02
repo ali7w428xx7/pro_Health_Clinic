@@ -86,4 +86,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapHub<ClinicAPI.Hubs.AppointmentHub>("/hubs/appointments");
 app.Run();
