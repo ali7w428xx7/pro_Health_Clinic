@@ -68,7 +68,7 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet("doctor-utilization")]
-    public async Task<IActionResult> DoctorUtilization()
+    public async Task<IActionResult> DoctorUtilization([FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
     {
         var doctors = await _db.Doctors
             .Include(d => d.ApplicationUser)
@@ -77,24 +77,32 @@ public class ReportsController : ControllerBase
             .Where(d => d.IsActive)
             .ToListAsync();
 
-        var result = doctors.Select(d => new DoctorUtilizationDto
+        var result = doctors.Select(d =>
+        {
+            var appointments = d.Appointments.AsQueryable();
+            if (from.HasValue) appointments = appointments.Where(a => a.AppointmentDate >= from.Value);
+            if (to.HasValue) appointments = appointments.Where(a => a.AppointmentDate <= to.Value);
+            var filteredAppointments = appointments.ToList();
+
+            return new DoctorUtilizationDto
         {
             DoctorId = d.Id,
             DoctorName = d.ApplicationUser.FullName,
             Specializations = d.DoctorSpecializations.Select(ds => ds.Specialization.Name).ToList(),
-            TotalAppointments = d.Appointments.Count,
-            CompletedAppointments = d.Appointments.Count(a => a.Status == AppointmentStatus.Completed),
-            CancelledAppointments = d.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled),
-            UtilizationRate = d.Appointments.Count > 0
-                ? Math.Round((double)d.Appointments.Count(a => a.Status == AppointmentStatus.Completed) / d.Appointments.Count * 100, 1)
+            TotalAppointments = filteredAppointments.Count,
+            CompletedAppointments = filteredAppointments.Count(a => a.Status == AppointmentStatus.Completed),
+            CancelledAppointments = filteredAppointments.Count(a => a.Status == AppointmentStatus.Cancelled),
+            UtilizationRate = filteredAppointments.Count > 0
+                ? Math.Round((double)filteredAppointments.Count(a => a.Status == AppointmentStatus.Completed) / filteredAppointments.Count * 100, 1)
                 : 0
+            };
         }).OrderByDescending(d => d.TotalAppointments).ToList();
 
         return Ok(result);
     }
 
     [HttpGet("cancellation-rates")]
-    public async Task<IActionResult> CancellationRates()
+    public async Task<IActionResult> CancellationRates([FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
     {
         var doctors = await _db.Doctors
             .Include(d => d.ApplicationUser)
@@ -102,21 +110,33 @@ public class ReportsController : ControllerBase
             .Where(d => d.IsActive)
             .ToListAsync();
 
-        var all = await _db.Appointments.ToListAsync();
+        var allQuery = _db.Appointments.AsQueryable();
+        if (from.HasValue) allQuery = allQuery.Where(a => a.AppointmentDate >= from.Value);
+        if (to.HasValue) allQuery = allQuery.Where(a => a.AppointmentDate <= to.Value);
+
+        var all = await allQuery.ToListAsync();
         var total = all.Count;
         var cancelled = all.Count(a => a.Status == AppointmentStatus.Cancelled);
         var missed = all.Count(a => a.Status == AppointmentStatus.Missed);
 
-        var byDoctor = doctors.Select(d => new DoctorCancellationDto
+        var byDoctor = doctors.Select(d =>
         {
-            DoctorName = d.ApplicationUser.FullName,
-            Total = d.Appointments.Count,
-            Cancelled = d.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled),
-            Missed = d.Appointments.Count(a => a.Status == AppointmentStatus.Missed),
-            CancellationRate = d.Appointments.Count > 0
-                ? Math.Round((double)d.Appointments.Count(a => a.Status == AppointmentStatus.Cancelled) / d.Appointments.Count * 100, 1) : 0,
-            NoShowRate = d.Appointments.Count > 0
-                ? Math.Round((double)d.Appointments.Count(a => a.Status == AppointmentStatus.Missed) / d.Appointments.Count * 100, 1) : 0
+            var appointments = d.Appointments.AsQueryable();
+            if (from.HasValue) appointments = appointments.Where(a => a.AppointmentDate >= from.Value);
+            if (to.HasValue) appointments = appointments.Where(a => a.AppointmentDate <= to.Value);
+            var filteredAppointments = appointments.ToList();
+
+            return new DoctorCancellationDto
+            {
+                DoctorName = d.ApplicationUser.FullName,
+                Total = filteredAppointments.Count,
+                Cancelled = filteredAppointments.Count(a => a.Status == AppointmentStatus.Cancelled),
+                Missed = filteredAppointments.Count(a => a.Status == AppointmentStatus.Missed),
+                CancellationRate = filteredAppointments.Count > 0
+                    ? Math.Round((double)filteredAppointments.Count(a => a.Status == AppointmentStatus.Cancelled) / filteredAppointments.Count * 100, 1) : 0,
+                NoShowRate = filteredAppointments.Count > 0
+                    ? Math.Round((double)filteredAppointments.Count(a => a.Status == AppointmentStatus.Missed) / filteredAppointments.Count * 100, 1) : 0
+            };
         }).OrderByDescending(d => d.CancellationRate).ToList();
 
         return Ok(new CancellationRateDto
