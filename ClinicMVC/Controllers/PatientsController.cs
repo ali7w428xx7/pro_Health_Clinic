@@ -110,6 +110,90 @@ public class PatientsController : Controller
         });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> EditProfile(int? id)
+    {
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null) return Challenge();
+
+        Patient? patient;
+
+        if (id.HasValue &&
+            (currentUser.Role == UserRole.ClinicManager || currentUser.Role == UserRole.Doctor))
+        {
+            patient = await _db.Patients
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.Id == id.Value);
+        }
+        else
+        {
+            patient = await _db.Patients
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id);
+        }
+
+        if (patient == null) return NotFound();
+
+        var model = new PatientEditProfileViewModel
+        {
+            Id = patient.Id,
+            Email = patient.ApplicationUser.Email ?? "",
+            DateOfBirth = patient.DateOfBirth,
+            Phone = patient.Phone,
+            Address = patient.Address
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditProfile(PatientEditProfileViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null) return Challenge();
+
+        Patient? patient;
+
+        if (currentUser.Role == UserRole.ClinicManager || currentUser.Role == UserRole.Doctor)
+        {
+            patient = await _db.Patients
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.Id == model.Id);
+        }
+        else
+        {
+            patient = await _db.Patients
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id);
+        }
+
+        if (patient == null) return NotFound();
+
+        patient.ApplicationUser.Email = model.Email;
+        patient.ApplicationUser.UserName = model.Email;
+        patient.ApplicationUser.NormalizedEmail = _userManager.NormalizeEmail(model.Email);
+        patient.ApplicationUser.NormalizedUserName = _userManager.NormalizeName(model.Email);
+
+        patient.DateOfBirth = model.DateOfBirth;
+        patient.Phone = model.Phone;
+        patient.Address = model.Address;
+
+        await _userManager.UpdateAsync(patient.ApplicationUser);
+        await _db.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Profile updated successfully.";
+
+        return RedirectToAction("Profile", new { id = patient.Id });
+    }
+
+
+
     [Authorize(Roles = "ClinicManager,Receptionist,Doctor")]
     public async Task<IActionResult> Index(string? search)
     {
