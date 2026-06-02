@@ -20,16 +20,18 @@ public class AppointmentsController : Controller
     private readonly IAppointmentService _apptService;
     private readonly INotificationService _notifyService;
     private readonly IHubContext<AppointmentHub> _hub;
+    private readonly string _apiBaseUrl;
 
     public AppointmentsController(ClinicDbContext db, UserManager<ApplicationUser> userManager,
         IAppointmentService apptService, INotificationService notifyService,
-        IHubContext<AppointmentHub> hub)
+        IHubContext<AppointmentHub> hub, IConfiguration config)
     {
         _db = db;
         _userManager = userManager;
         _apptService = apptService;
         _notifyService = notifyService;
         _hub = hub;
+        _apiBaseUrl = config["ApiSettings:BaseUrl"] ?? "http://localhost:5095";
     }
 
     public async Task<IActionResult> Index(string? status, DateOnly? from, DateOnly? to, int page = 1)
@@ -480,6 +482,7 @@ public class AppointmentsController : Controller
                 Status = a.Status
             }).ToListAsync();
 
+        ViewBag.ApiBaseUrl = _apiBaseUrl;
         return View(appointments);
     }
 
