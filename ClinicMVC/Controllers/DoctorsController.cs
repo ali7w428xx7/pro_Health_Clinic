@@ -170,9 +170,52 @@ public class DoctorsController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteSchedule(int id, int doctorId)
     {
-        var schedule = await _db.DoctorSchedules.FindAsync(id);
-        if (schedule != null) { _db.DoctorSchedules.Remove(schedule); await _db.SaveChangesAsync(); }
-        TempData["Success"] = "Schedule removed.";
+        var schedule = await _db.DoctorSchedules
+            .FirstOrDefaultAsync(s => s.Id == id && s.DoctorId == doctorId);
+
+        if (schedule == null)
+        {
+            TempData["Error"] = "Schedule not found.";
+            return RedirectToAction("Details", new { id = doctorId });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        var possibleAppointments = await _db.Appointments
+            .Include(a => a.Patient).ThenInclude(p => p.ApplicationUser)
+            .Where(a => a.DoctorId == doctorId &&
+                        a.AppointmentDate >= today &&
+                        (a.Status == AppointmentStatus.Requested ||
+                         a.Status == AppointmentStatus.Confirmed))
+            .ToListAsync();
+
+        var affectedAppointments = possibleAppointments
+            .Where(a => a.AppointmentDate.DayOfWeek == schedule.DayOfWeek &&
+                        a.StartTime >= schedule.StartTime &&
+                        a.StartTime < schedule.EndTime)
+            .ToList();
+
+        foreach (var appointment in affectedAppointments)
+        {
+            appointment.Status = AppointmentStatus.Cancelled;
+            appointment.CancellationReason = "Doctor schedule was removed.";
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            await _notifyService.SendAsync(
+                appointment.Patient.ApplicationUserId,
+                "Appointment Cancelled",
+                $"Your appointment on {appointment.AppointmentDate:dd/MM/yyyy} at {appointment.StartTime:hh\\:mm} has been cancelled because the doctor's schedule was removed.",
+                NotificationType.AppointmentCancelled,
+                appointment.Id);
+        }
+
+        _db.DoctorSchedules.Remove(schedule);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = affectedAppointments.Count > 0
+            ? $"Schedule removed and {affectedAppointments.Count} affected appointment(s) cancelled."
+            : "Schedule removed.";
+
         return RedirectToAction("Details", new { id = doctorId });
     }
 
