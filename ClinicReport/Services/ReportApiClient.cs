@@ -9,9 +9,9 @@ namespace ClinicReport.Services;
 public interface IReportApiClient
 {
     Task<AuthResponse?> LoginAsync(string email, string password);
-    Task<AppointmentStatsDto?> GetAppointmentStatsAsync();
-    Task<List<DoctorUtilizationDto>> GetDoctorUtilizationAsync();
-    Task<CancellationRateDto?> GetCancellationRatesAsync();
+    Task<AppointmentStatsDto?> GetAppointmentStatsAsync(string? from = null, string? to = null);
+    Task<List<DoctorUtilizationDto>> GetDoctorUtilizationAsync(string? from = null, string? to = null);
+    Task<CancellationRateDto?> GetCancellationRatesAsync(string? from = null, string? to = null);
 }
 
 public class ReportApiClient : IReportApiClient
@@ -49,28 +49,36 @@ public class ReportApiClient : IReportApiClient
         return JsonSerializer.Deserialize<AuthResponse>(json, JsonOpts);
     }
 
-    public async Task<AppointmentStatsDto?> GetAppointmentStatsAsync()
+    private static string BuildDateQuery(string? from, string? to)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(from)) parts.Add($"from={Uri.EscapeDataString(from)}");
+        if (!string.IsNullOrWhiteSpace(to)) parts.Add($"to={Uri.EscapeDataString(to)}");
+        return parts.Count > 0 ? "?" + string.Join("&", parts) : string.Empty;
+    }
+
+    public async Task<AppointmentStatsDto?> GetAppointmentStatsAsync(string? from = null, string? to = null)
     {
         AttachToken();
-        var response = await _http.GetAsync("/api/reports/appointment-statistics");
+        var response = await _http.GetAsync($"/api/reports/appointment-statistics{BuildDateQuery(from, to)}");
         if (!response.IsSuccessStatusCode) return null;
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<AppointmentStatsDto>(json, JsonOpts);
     }
 
-    public async Task<List<DoctorUtilizationDto>> GetDoctorUtilizationAsync()
+    public async Task<List<DoctorUtilizationDto>> GetDoctorUtilizationAsync(string? from = null, string? to = null)
     {
         AttachToken();
-        var response = await _http.GetAsync("/api/reports/doctor-utilization");
+        var response = await _http.GetAsync($"/api/reports/doctor-utilization{BuildDateQuery(from, to)}");
         if (!response.IsSuccessStatusCode) return [];
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<DoctorUtilizationDto>>(json, JsonOpts) ?? [];
     }
 
-    public async Task<CancellationRateDto?> GetCancellationRatesAsync()
+    public async Task<CancellationRateDto?> GetCancellationRatesAsync(string? from = null, string? to = null)
     {
         AttachToken();
-        var response = await _http.GetAsync("/api/reports/cancellation-rates");
+        var response = await _http.GetAsync($"/api/reports/cancellation-rates{BuildDateQuery(from, to)}");
         if (!response.IsSuccessStatusCode) return null;
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<CancellationRateDto>(json, JsonOpts);

@@ -16,30 +16,39 @@ public class ReportsController : Controller
         return null!;
     }
 
-    public async Task<IActionResult> Appointments()
+    public async Task<IActionResult> Appointments(string? from, string? to)
     {
         var redirect = RequireAuth();
         if (redirect != null) return redirect;
 
-        var stats = await _api.GetAppointmentStatsAsync();
+        ViewBag.From = from;
+        ViewBag.To = to;
+
+        var stats = await _api.GetAppointmentStatsAsync(from, to);
         return View(stats);
     }
 
-    public async Task<IActionResult> DoctorUtilization()
+    public async Task<IActionResult> DoctorUtilization(string? from, string? to)
     {
         var redirect = RequireAuth();
         if (redirect != null) return redirect;
 
-        var data = await _api.GetDoctorUtilizationAsync();
+        ViewBag.From = from;
+        ViewBag.To = to;
+
+        var data = await _api.GetDoctorUtilizationAsync(from, to);
         return View(data);
     }
 
-    public async Task<IActionResult> CancellationRates()
+    public async Task<IActionResult> CancellationRates(string? from, string? to)
     {
         var redirect = RequireAuth();
         if (redirect != null) return redirect;
 
-        var data = await _api.GetCancellationRatesAsync();
+        ViewBag.From = from;
+        ViewBag.To = to;
+
+        var data = await _api.GetCancellationRatesAsync(from, to);
         return View(data);
     }
 }
