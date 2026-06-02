@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 namespace ClinicMVC.ViewModels;
 
 public class PatientProfileViewModel
@@ -44,4 +45,21 @@ public class PatientSummaryViewModel
     public string Gender { get; set; } = "";
     public int AppointmentCount { get; set; }
     public DateOnly? LastVisit { get; set; }
+}
+
+public class PatientEditProfileViewModel
+{
+    public int Id { get; set; }
+
+    [Required, EmailAddress]
+    public string Email { get; set; } = "";
+
+    [Required, Display(Name = "Date of Birth"), DataType(DataType.Date)]
+    public DateTime DateOfBirth { get; set; }
+
+    [Required, Phone]
+    public string Phone { get; set; } = "";
+
+    [Required]
+    public string Address { get; set; } = "";
 }
