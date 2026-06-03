@@ -8,13 +8,9 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Database (shared from ClinicAPI project) ───────────────────────────────
-var connectionString = builder.Environment.IsProduction()
-    ? builder.Configuration.GetConnectionString("AzureConnection")
-    : builder.Configuration.GetConnectionString("DefaultConnection");
-
 builder.Services.AddDbContext<ClinicDbContext>(options =>
     options.UseSqlServer(
-        connectionString,
+        builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
