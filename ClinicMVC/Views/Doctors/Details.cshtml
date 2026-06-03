@@ -83,7 +83,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
-                        <thead class="table-light"><tr><th>From</th><th>To</th><th>Reason</th><th>Approved</th></tr></thead>
+                        <thead class="table-light"><tr><th>From</th><th>To</th><th>Reason</th><th>Approved</th><th></th></tr></thead>
                         <tbody>
                             @foreach (var l in Model.LeavePeriods)
                             {
@@ -92,10 +92,20 @@
                                     <td>@l.EndDate.ToString("dd MMM yyyy")</td>
                                     <td>@l.Reason</td>
                                     <td><span class="badge @(l.IsApproved ? "bg-success" : "bg-warning text-dark")">@(l.IsApproved ? "Yes" : "Pending")</span></td>
+                                    <td>
+                                        <form asp-action="DeleteLeave" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@l.Id" />
+                                            <input type="hidden" name="doctorId" value="@Model.Id" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-0" onclick="return confirm('Delete this leave period?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             }
                             @if (!Model.LeavePeriods.Any())
-                            { <tr><td colspan="4" class="text-muted text-center py-2">No leave periods.</td></tr> }
+                            { <tr><td colspan="5" class="text-muted text-center py-2">No leave periods.</td></tr> }
                         </tbody>
                     </table>
                 </div>

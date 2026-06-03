@@ -275,6 +275,25 @@ public class DoctorsController : Controller
         return RedirectToAction("Details", new { id = model.DoctorId });
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteLeave(int id, int doctorId)
+    {
+        var leave = await _db.LeavePeriods
+            .FirstOrDefaultAsync(l => l.Id == id && l.DoctorId == doctorId);
+
+        if (leave == null)
+        {
+            TempData["Error"] = "Leave period not found.";
+            return RedirectToAction("Details", new { id = doctorId });
+        }
+
+        _db.LeavePeriods.Remove(leave);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Leave period deleted.";
+        return RedirectToAction("Details", new { id = doctorId });
+    }
+
     // Specializations CRUD
     public async Task<IActionResult> Specializations()
     {
